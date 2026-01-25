@@ -1,8 +1,3 @@
-# Media files
-*.pdf
-*.png
-*.gif
-
 # Include the prosjekt.pdf
 !prosjekt.pdf
 

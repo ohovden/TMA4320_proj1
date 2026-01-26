@@ -14,7 +14,7 @@ def init_nn_params(
 ) -> list[tuple[jnp.ndarray, jnp.ndarray]]:
     """Initialize network parameters and learnable scalars."""
     if key is None:
-        key = jax.random.PRNGKey(cfg.seed if seed is None else seed)
+        key = jax.random.key(cfg.seed if seed is None else seed)
 
     layers = cfg.layer_sizes
 
@@ -37,7 +37,7 @@ def init_nn_params(
 
 def init_pinn_params(cfg: Config, seed: int | None = None):
     """Initialize network parameters and learnable scalars."""
-    key = jax.random.PRNGKey(cfg.seed if seed is None else seed)
+    key = jax.random.key(cfg.seed if seed is None else seed)
     key, nn_key, scalars_key = jax.random.split(key, 3)
 
     #######################################################################

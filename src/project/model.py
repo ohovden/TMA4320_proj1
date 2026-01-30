@@ -45,7 +45,7 @@ def init_pinn_params(cfg: Config, seed: int | None = None):
     #######################################################################
 
     # Placeholder initialization — replace this with your implementation
-    pinn_params = {}
+    pinn_params = {'nn': None, 'log_alpha': 0, 'log_k': 0, 'log_h': 0, 'log_power': 0}
 
     #######################################################################
     # Oppgave 5.1: Slutt

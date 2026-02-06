@@ -46,7 +46,7 @@ def ic_loss(
     ic_points: jnp.ndarray,
     cfg: Config,
 ) -> jnp.ndarray:
-    """Initial condition loss: T(x, y, 0) = T_outside.
+    '''Initial condition loss: T(x, y, 0) = T_outside.
 
     Args:
         nn_params: Network parameters (list of (w, b) tuples)
@@ -55,7 +55,7 @@ def ic_loss(
 
     Returns:
         Mean squared IC error
-    """
+    '''
     x, y = ic_points[:, 0], ic_points[:, 1]
 
     #######################################################################
@@ -73,7 +73,7 @@ def ic_loss(
 
 
 def physics_loss(pinn_params, interior_points, cfg: Config):
-    """PDE residual loss at collocation points.
+    '''PDE residual loss at collocation points.
 
     Args:
         pinn_params: Full pinn_params dict with 'nn', 'log_alpha', 'log_power'
@@ -82,7 +82,7 @@ def physics_loss(pinn_params, interior_points, cfg: Config):
 
     Returns:
         Mean squared PDE residual
-    """
+    '''
     x, y, t = interior_points[:, 0], interior_points[:, 1], interior_points[:, 2]
 
     #######################################################################
@@ -90,7 +90,20 @@ def physics_loss(pinn_params, interior_points, cfg: Config):
     #######################################################################
 
     # Placeholder initialization — replace this with your implementation
-    physics_loss_val = None
+    
+
+    physics_loss_val = ( 
+        1 / t *
+        sum([
+           grad(forward, 2)(pinn_params['nn'], x, y, t, cfg)
+           - pinn_params['log-alpha'] * (
+                sum([
+                    grad(grad(forward, j))(pinn_params['nn'], x, y, t, cfg)
+                for j in [0, 1, 2]])
+            )
+           #- 
+        for i in range(t)]) 
+    )
 
     #######################################################################
     # Oppgave 5.2: Slutt
@@ -100,7 +113,7 @@ def physics_loss(pinn_params, interior_points, cfg: Config):
 
 
 def bc_loss(pinn_params: dict, bc_points, cfg: Config) -> jnp.ndarray:
-    """Robin boundary condition loss: -k * grad(T) . n = h * (T - T_out).
+    '''Robin boundary condition loss: -k * grad(T) . n = h * (T - T_out).
 
     Args:
         pinn_params: Full pinn_params dict with 'nn', 'log_k', 'log_h' keys
@@ -109,12 +122,12 @@ def bc_loss(pinn_params: dict, bc_points, cfg: Config) -> jnp.ndarray:
 
     Returns:
         Mean squared BC residual
-    """
+    '''
     x, y, t = bc_points[:, 0], bc_points[:, 1], bc_points[:, 2]
     nx, ny = bc_points[:, 3], bc_points[:, 4]
 
     def _bc_residual_scalar(pinn_params, x, y, t, nx, ny, cfg: Config):
-        """Compute Robin BC residual: -k * grad(T) . n - h * (T - T_out) = 0.
+        '''Compute Robin BC residual: -k * grad(T) . n - h * (T - T_out) = 0.
 
         Args:
             pinn_params: Full pinn_params dict with 'nn', 'log_k', 'log_h' keys
@@ -124,7 +137,7 @@ def bc_loss(pinn_params: dict, bc_points, cfg: Config) -> jnp.ndarray:
 
         Returns:
             BC residual (scalar)
-        """
+        '''
 
         def T_fn(x, y, t):
             return forward(pinn_params["nn"], x, y, t, cfg)

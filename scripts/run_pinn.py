@@ -7,6 +7,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 from viz import create_animation, plot_snapshots
 
+
 from project import (
     generate_training_data,
     load_config,

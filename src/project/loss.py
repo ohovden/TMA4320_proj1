@@ -30,9 +30,12 @@ def data_loss(
     #######################################################################
     # Oppgave 4.2: Start
     #######################################################################
+ 
+    T_pred = forward(nn_params, x, y, t, cfg)
 
-    # Placeholder initialization — replace this with your implementation
-    data_loss_val = None
+    d = T_pred - T_true
+
+    data_loss_val = jnp.mean(jnp.square(d))
 
     #######################################################################
     # Oppgave 4.2: Slutt (se også ic_loss)
@@ -62,9 +65,12 @@ def ic_loss(
     # Oppgave 4.2: Start
     #######################################################################
 
-    # Placeholder initialization — replace this with your implementation
-    ic_loss_val = None
+    T_pred = forward(nn_params, x, y, cfg.t_min, cfg)
 
+    d = T_pred - cfg.T_outside
+
+    ic_loss_val = jnp.mean(jnp.square(d))
+    
     #######################################################################
     # Oppgave 4.2: Slutt (se også data_loss)
     #######################################################################

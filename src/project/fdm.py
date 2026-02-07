@@ -32,9 +32,20 @@ def solve_heat_equation(
     #######################################################################
     # Oppgave 3.2: Start
     #######################################################################
-
+    
     # Placeholder initialization — replace this with your implementation
     T = np.zeros((cfg.nt, cfg.nx, cfg.ny))
+
+    T_current = np.full((cfg.nx*cfg.ny,), cfg.T_outside)
+
+    A = _build_matrix(cfg, dx, dy, dt)
+    b = _build_rhs(cfg, T_current.reshape((cfg.nx, cfg.ny)), X, Y, dx, dy, dt, dt)
+    
+    for i, t_k in enumerate(t):
+        T_current = np.linalg.solve(A, b)
+        T[i] = T_current.reshape((cfg.nx, cfg.ny))
+        b = _build_rhs(cfg, T_current.reshape((cfg.nx, cfg.ny)), X, Y, dx, dy, dt, t_k + dt)
+        
 
     #######################################################################
     # Oppgave 3.2: Slutt

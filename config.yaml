@@ -23,10 +23,10 @@ physics:
 source:
   locations:
     - [5.0, 2.5]        # Heat source position (x, y)
-    # - [1.0, 1.0]        # Additional heat source position
+    - [1.0, 1.0]        # Additional heat source position
   sizes:
     - 0.5                # Heat source size (meters)
-    # - 0.3                # Additional heat source size
+    - 0.3                # Additional heat source size
 
   strength: 15.0         # Heat source strength (degrees/hour)
 

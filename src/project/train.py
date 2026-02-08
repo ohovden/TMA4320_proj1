@@ -11,7 +11,6 @@ from .model import init_nn_params, init_pinn_params
 from .optim import adam_step, init_adam
 from .sampling import sample_bc, sample_ic, sample_interior
 
-
 def train_nn(
     sensor_data: jnp.ndarray, cfg: Config
 ) -> tuple[list[tuple[jnp.ndarray, jnp.ndarray]], dict]:
@@ -60,6 +59,7 @@ def train_nn(
         losses["total"].append(l_total)
         losses["data"].append(l_data)
         losses["ic"].append(l_ic)
+
     #######################################################################
     # Oppgave 4.3: Slutt
     #######################################################################
@@ -89,7 +89,35 @@ def train_pinn(sensor_data: jnp.ndarray, cfg: Config) -> tuple[dict, dict]:
     #######################################################################
 
     # Update the nn_params and losses dictionary
+    @jit
+    def step(params, state, ic_batch, bc_batch):
+        def loss_fn(p):
+            l_data = data_loss(p['nn'], sensor_data, cfg)
+            l_ic = ic_loss(p['nn'], ic_batch, cfg)
+            l_ph = physics_loss(p, ic_batch, cfg)
+            l_bc = bc_loss(p, bc_batch, cfg)
+            return cfg.lambda_data * l_data + cfg.lambda_ic * l_ic + cfg.lambda_physics*l_ph + cfg.lambda_bc*l_bc, (l_data, l_ic, l_ph, l_bc)
 
+        (total_val, (l_data_val, l_ic_val, l_ph_val, l_bc_val)), grads = jax.value_and_grad(
+            loss_fn, has_aux=True, allow_int=True
+        )(params)
+
+        new_params, new_state = adam_step(params, grads, state, lr=cfg.learning_rate)
+
+        return new_params, new_state, total_val, l_data_val, l_ic_val, l_ph_val, l_bc_val
+
+    # Training loop
+    for _ in range(cfg.num_epochs):
+        ic_epoch, key = sample_ic(key, cfg)
+        bc_epoch, key = sample_bc(key, cfg)
+
+        pinn_params, opt_state, l_total, l_data, l_ic, l_ph, l_bc = step(pinn_params, opt_state, ic_epoch, bc_epoch)
+
+        losses["total"].append(l_total)
+        losses["data"].append(l_data)
+        losses["ic"].append(l_ic)
+        losses["physics"].append(l_ph)
+        losses["bc"].append(l_bc)
     #######################################################################
     # Oppgave 5.3: Slutt
     #######################################################################

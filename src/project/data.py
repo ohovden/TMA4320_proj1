@@ -29,12 +29,6 @@ def generate_training_data(
     x, y, t, T_fdm = solve_heat_equation(cfg)
 
     sensor_data = _generate_sensor_data(x, y, t, T_fdm, cfg)
-<<<<<<< HEAD
-
-    
-
-=======
->>>>>>> origin
 
     #######################################################################
     # Oppgave 3.3: Slutt

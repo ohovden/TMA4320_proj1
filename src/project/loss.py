@@ -1,7 +1,7 @@
 """Loss functions for PINN training."""
 
 import jax.numpy as jnp
-from jax import grad, vmap
+from jax import grad, vmap, hessian
 
 from .config import Config
 from .model import forward
@@ -96,20 +96,14 @@ def physics_loss(pinn_params, interior_points, cfg: Config):
     #######################################################################
 
     # Placeholder initialization — replace this with your implementation
-    
+    def bound_forward(x, y, t):
+        return forward(pinn_params['nn'], x, y, t, cfg)
 
-    physics_loss_val = ( 
-        1 / t *
-        sum([
-            grad(forward, 2)(pinn_params['nn'], x, y, t, cfg)
-           - pinn_params['log-alpha'] * (
-                sum([
-                    grad(grad(forward, j))(pinn_params['nn'], x, y, t, cfg)
-                for j in [0, 1, 2]])
-            )
-           #- 
-        for i in range(t)]) 
-    )
+    physics_loss_val = jnp.mean(jnp.array([
+        (grad(bound_forward, 2)(x_i, y_i, t_i)
+        - jnp.exp(pinn_params['log_alpha']) * sum([grad(grad(bound_forward, i), i)(x_i, y_i, t_i) for i in [0, 1]])
+        - cfg.is_source(x_i, y_i)* cfg.source_strength)**2
+    for (x_i, y_i, t_i) in zip(x, y, t)]))
 
     #######################################################################
     # Oppgave 5.2: Slutt

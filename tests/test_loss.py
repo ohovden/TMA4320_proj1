@@ -314,9 +314,9 @@ class TestPhysicsLoss:
         expected_loss = residual**2  # Single point, so mean = value
 
         assert jnp.allclose(loss, expected_loss, atol=1e-5), (
-            f"physics_loss = {float(loss):.8f}, expected = {float(expected_loss):.8f}. "
+            f"physics_loss = {loss}, expected = {expected_loss}. "
             f"(T_t={float(T_t):.6f}, T_xx={float(T_xx):.6f}, T_yy={float(T_yy):.6f}, "
-            f"alpha={float(alpha):.6f}, q={float(q):.6f})\n"
+            f"alpha={alpha}, q={q})\n"
             "The PDE residual should be:\n"
             "  residual = T_t - alpha * (T_xx + T_yy) - q\n"
             "where:\n"

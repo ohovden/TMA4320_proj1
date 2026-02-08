@@ -44,6 +44,8 @@ def adam_step(params, grads, state, lr=1e-3, b1=0.9, b2=0.999, eps=1e-8):
         lambda v, g: b2 * v + (1 - b2) * g**2, state["v"], grads
     )
 
+    print('overlevd tree_map')
+
     # Bias correction
     m_corr = 1 - b1**t
     v_corr = 1 - b2**t
@@ -56,5 +58,7 @@ def adam_step(params, grads, state, lr=1e-3, b1=0.9, b2=0.999, eps=1e-8):
 
     new_params = jax.tree_util.tree_map(update, params, new_m, new_v)
     new_state = {"m": new_m, "v": new_v, "t": t}
+
+    print('overlevd andre tree_map')
 
     return new_params, new_state

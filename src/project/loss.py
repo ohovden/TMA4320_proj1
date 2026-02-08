@@ -1,7 +1,7 @@
 """Loss functions for PINN training."""
 
 import jax.numpy as jnp
-from jax import grad, vmap
+from jax import grad, vmap, hessian
 
 from .config import Config
 from .model import forward
@@ -49,7 +49,7 @@ def ic_loss(
     ic_points: jnp.ndarray,
     cfg: Config,
 ) -> jnp.ndarray:
-    """Initial condition loss: T(x, y, 0) = T_outside.
+    '''Initial condition loss: T(x, y, 0) = T_outside.
 
     Args:
         nn_params: Network parameters (list of (w, b) tuples)
@@ -58,18 +58,18 @@ def ic_loss(
 
     Returns:
         Mean squared IC error
-    """
+    '''
     x, y = ic_points[:, 0], ic_points[:, 1]
 
     #######################################################################
     # Oppgave 4.2: Start
     #######################################################################
 
-    T_pred = forward(nn_params, x, y, cfg.t_min, cfg)
+    # Placeholder initialization — replace this with your implementation
 
-    d = T_pred - cfg.T_outside
-
-    ic_loss_val = jnp.mean(jnp.square(d))
+    ic_loss_val = jnp.mean(jnp.array([
+        (forward(nn_params, x, y, 0, cfg) - cfg.T_outside)**2
+    for x, y in zip(x, y)]))
     
     #######################################################################
     # Oppgave 4.2: Slutt (se også data_loss)
@@ -79,7 +79,7 @@ def ic_loss(
 
 
 def physics_loss(pinn_params, interior_points, cfg: Config):
-    """PDE residual loss at collocation points.
+    '''PDE residual loss at collocation points.
 
     Args:
         pinn_params: Full pinn_params dict with 'nn', 'log_alpha', 'log_power'
@@ -88,7 +88,7 @@ def physics_loss(pinn_params, interior_points, cfg: Config):
 
     Returns:
         Mean squared PDE residual
-    """
+    '''
     x, y, t = interior_points[:, 0], interior_points[:, 1], interior_points[:, 2]
 
     #######################################################################
@@ -96,7 +96,14 @@ def physics_loss(pinn_params, interior_points, cfg: Config):
     #######################################################################
 
     # Placeholder initialization — replace this with your implementation
-    physics_loss_val = None
+    def bound_forward(x, y, t):
+        return forward(pinn_params['nn'], x, y, t, cfg)
+
+    physics_loss_val = jnp.mean(jnp.array([
+        (grad(bound_forward, 2)(x_i, y_i, t_i)
+        - jnp.exp(pinn_params['log_alpha']) * sum([grad(grad(bound_forward, i), i)(x_i, y_i, t_i) for i in [0, 1]])
+        - cfg.is_source(x_i, y_i)* cfg.source_strength)**2
+    for (x_i, y_i, t_i) in zip(x, y, t)]))
 
     #######################################################################
     # Oppgave 5.2: Slutt
@@ -106,7 +113,7 @@ def physics_loss(pinn_params, interior_points, cfg: Config):
 
 
 def bc_loss(pinn_params: dict, bc_points, cfg: Config) -> jnp.ndarray:
-    """Robin boundary condition loss: -k * grad(T) . n = h * (T - T_out).
+    '''Robin boundary condition loss: -k * grad(T) . n = h * (T - T_out).
 
     Args:
         pinn_params: Full pinn_params dict with 'nn', 'log_k', 'log_h' keys
@@ -115,12 +122,12 @@ def bc_loss(pinn_params: dict, bc_points, cfg: Config) -> jnp.ndarray:
 
     Returns:
         Mean squared BC residual
-    """
+    '''
     x, y, t = bc_points[:, 0], bc_points[:, 1], bc_points[:, 2]
     nx, ny = bc_points[:, 3], bc_points[:, 4]
 
     def _bc_residual_scalar(pinn_params, x, y, t, nx, ny, cfg: Config):
-        """Compute Robin BC residual: -k * grad(T) . n - h * (T - T_out) = 0.
+        '''Compute Robin BC residual: -k * grad(T) . n - h * (T - T_out) = 0.
 
         Args:
             pinn_params: Full pinn_params dict with 'nn', 'log_k', 'log_h' keys
@@ -130,7 +137,7 @@ def bc_loss(pinn_params: dict, bc_points, cfg: Config) -> jnp.ndarray:
 
         Returns:
             BC residual (scalar)
-        """
+        '''
 
         def T_fn(x, y, t):
             return forward(pinn_params["nn"], x, y, t, cfg)

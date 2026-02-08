@@ -70,8 +70,11 @@ def ic_loss(
     #######################################################################
 
     # Placeholder initialization — replace this with your implementation
-    ic_loss_val = None
 
+    ic_loss_val = jnp.mean(jnp.array([
+        (forward(nn_params, x, y, 0, cfg) - cfg.T_outside)**2
+    for x, y in zip(x, y)]))
+    
     #######################################################################
     # Oppgave 4.2: Slutt (se også data_loss)
     #######################################################################
@@ -102,7 +105,7 @@ def physics_loss(pinn_params, interior_points, cfg: Config):
     physics_loss_val = ( 
         1 / t *
         sum([
-           grad(forward, 2)(pinn_params['nn'], x, y, t, cfg)
+            grad(forward, 2)(pinn_params['nn'], x, y, t, cfg)
            - pinn_params['log-alpha'] * (
                 sum([
                     grad(grad(forward, j))(pinn_params['nn'], x, y, t, cfg)

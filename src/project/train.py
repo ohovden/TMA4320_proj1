@@ -35,8 +35,31 @@ def train_nn(
     # Oppgave 4.3: Start
     #######################################################################
 
-    # Update the nn_params and losses dictionary
+    # Define a jitted step that takes current params/state and an IC batch
+    @jit
+    def step(params, state, ic_batch):
+        def loss_fn(p):
+            l_data = data_loss(p, sensor_data, cfg)
+            l_ic = ic_loss(p, ic_batch, cfg)
+            return cfg.lambda_data * l_data + cfg.lambda_ic * l_ic, (l_data, l_ic)
 
+        (total_val, (l_data_val, l_ic_val)), grads = jax.value_and_grad(
+            loss_fn, has_aux=True
+        )(params)
+
+        new_params, new_state = adam_step(params, grads, state, lr=cfg.learning_rate)
+
+        return new_params, new_state, total_val, l_data_val, l_ic_val
+
+    # Training loop
+    for _ in range(cfg.num_epochs):
+        ic_epoch, key = sample_ic(key, cfg)
+
+        nn_params, adam_state, l_total, l_data, l_ic = step(nn_params, adam_state, ic_epoch)
+
+        losses["total"].append(l_total)
+        losses["data"].append(l_data)
+        losses["ic"].append(l_ic)
     #######################################################################
     # Oppgave 4.3: Slutt
     #######################################################################

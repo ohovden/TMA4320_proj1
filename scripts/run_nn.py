@@ -21,6 +21,25 @@ def main():
     # Oppgave 4.4: Start
     #######################################################################
 
+    x, y, t, _, sensor_data = generate_training_data(cfg)
+
+    params, _ = train_nn(sensor_data, cfg)
+
+    T_pred = predict_grid(params, x, y, t, cfg)
+
+    print("\nGenerating NN visualizations...")
+    plot_snapshots(
+        x,
+        y,
+        t,
+        T_pred,
+        save_path="output/nn/nn_snapshots.png",
+    )
+    create_animation(
+        x, y, t, T_pred, title="NN", save_path="output/nn/nn_animation.gif"
+    )
+
+
     #######################################################################
     # Oppgave 4.4: Slutt
     #######################################################################
